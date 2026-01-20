@@ -2,7 +2,7 @@
 
 import { signIn } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { Prisma } from "@prisma/client"
+import { PrismaClient } from "@prisma/client"
 import { loginSchema, signupSchema, SignupData, LoginData } from "@/lib/schemas"
 import bcrypt from "bcryptjs"
 import { AuthError } from "next-auth"
@@ -58,7 +58,7 @@ export async function signup(data: SignupData) {
   const hashedPassword = await bcrypt.hash(password, 10)
 
   try {
-    await db.$transaction(async (tx: Prisma.TransactionClient) => {
+    await db.$transaction(async (tx: any) => {
       // Create company
       const company = await tx.company.create({
         data: {
