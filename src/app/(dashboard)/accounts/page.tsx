@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth"
-import { db } from "@/lib/db"
+import { db, Account } from "@/lib/db"
 import { AccountDialog } from "@/components/accounts/account-dialog"
 import { AccountActions } from "@/components/accounts/account-actions"
 import {
@@ -52,7 +52,7 @@ export default async function AccountsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                accounts.map((account: any) => (
+                accounts.map((account: Account) => (
                   <TableRow key={account.id}>
                     <TableCell className="font-medium">{account.name}</TableCell>
                     <TableCell>{account.type}</TableCell>
