@@ -22,7 +22,16 @@ export const tagSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
 })
 
+export const expenditureSchema = z.object({
+  description: z.string().min(2, { message: "Description must be at least 2 characters" }),
+  amount: z.coerce.number().positive({ message: "Amount must be positive" }),
+  date: z.date({ message: "Date is required" }),
+  accountId: z.string().min(1, { message: "Account is required" }),
+  tagIds: z.array(z.string()).optional(),
+})
+
 export type LoginData = z.infer<typeof loginSchema>
 export type SignupData = z.infer<typeof signupSchema>
 export type AccountData = z.infer<typeof accountSchema>
 export type TagData = z.infer<typeof tagSchema>
+export type ExpenditureData = z.infer<typeof expenditureSchema>

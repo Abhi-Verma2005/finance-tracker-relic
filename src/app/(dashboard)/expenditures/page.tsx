@@ -1,0 +1,105 @@
+import { auth } from "@/lib/auth"
+import { db } from "@/lib/db"
+import { ExpenditureDialog } from "@/components/expenditures/expenditure-dialog"
+import { ExpenditureActions } from "@/components/expenditures/expenditure-actions"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { format } from "date-fns"
+import { Badge } from "@/components/ui/badge"
+
+export default async function ExpendituresPage() {
+  const session = await auth()
+  
+  const [expenditures, accounts, tags] = await Promise.all([
+    db.expenditure.findMany({
+      where: {
+        companyId: session?.user?.companyId,
+      },
+      include: {
+        account: true,
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
+      orderBy: {
+        date: "desc",
+      },
+    }),
+    db.account.findMany({
+      where: { companyId: session?.user?.companyId },
+    }),
+    db.tag.findMany({
+      where: { companyId: session?.user?.companyId },
+    }),
+  ])
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Expenditures</h1>
+        <ExpenditureDialog accounts={accounts} tags={tags} />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Expenses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Account</TableHead>
+                <TableHead>Tags</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {expenditures.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">
+                    No expenditures logged.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                expenditures.map((exp) => (
+                  <TableRow key={exp.id}>
+                    <TableCell>{format(exp.date, "PPP")}</TableCell>
+                    <TableCell className="font-medium">{exp.description}</TableCell>
+                    <TableCell>{exp.account.name}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {exp.tags.map(({ tag }) => (
+                          <Badge key={tag.id} variant="secondary">
+                            {tag.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-bold text-red-500">
+                      -${exp.amount.toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <ExpenditureActions id={exp.id} />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

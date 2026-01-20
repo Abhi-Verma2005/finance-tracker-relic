@@ -44,7 +44,7 @@ export function SignupForm() {
         // router.push("/login") 
       }
     } catch (error) {
-      toast.error("Something went wrong")
+      // toast.error("Something went wrong")
     } finally {
       setIsPending(false)
     }

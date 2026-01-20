@@ -5,6 +5,8 @@ import { LayoutDashboard, Wallet, Receipt, Tags, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/auth"
 
+import { ModeToggle } from "@/components/theme-toggle"
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -19,10 +21,13 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <aside className="w-full md:w-64 bg-gray-900 text-white p-6 flex flex-col">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold">Finance Tracker</h1>
-          <p className="text-sm text-gray-400 mt-1">{session.user?.name}</p>
-          <p className="text-xs text-gray-500">{session.user?.email}</p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold">Finance Tracker</h1>
+            <p className="text-sm text-gray-400 mt-1">{session.user?.name}</p>
+            <p className="text-xs text-gray-500">{session.user?.email}</p>
+          </div>
+          <ModeToggle />
         </div>
         
         <nav className="flex-1 space-y-2">

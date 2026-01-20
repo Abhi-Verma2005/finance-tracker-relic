@@ -38,10 +38,10 @@ export function LoginForm() {
         toast.error(result.error)
       } else {
         // Successful login will redirect via server action
-        toast.success("Logged in successfully")
+        // toast.success("Logged in successfully")
       }
     } catch (error) {
-      toast.error("Something went wrong")
+      // toast.error("Something went wrong")
     } finally {
       setIsPending(false)
     }
