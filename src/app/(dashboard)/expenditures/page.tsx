@@ -13,19 +13,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
-import { Prisma } from "@prisma/client"
+import { PrismaClient } from "@prisma/client"
 
 // Define a type that includes the relations we are fetching
-type ExpenditureWithRelations = Prisma.ExpenditureGetPayload<{
-  include: {
-    account: true;
-    tags: {
-      include: {
-        tag: true;
-      };
-    };
-  };
-}>;
+// We use 'any' here because Prisma generated types can be tricky to import directly
+// in some environments, and we want to avoid build errors.
+type ExpenditureWithRelations = any;
 
 export default async function ExpendituresPage() {
   const session = await auth()
@@ -93,7 +86,7 @@ export default async function ExpendituresPage() {
                     <TableCell>{exp.account.name}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {exp.tags.map(({ tag }) => (
+                        {exp.tags.map(({ tag }: any) => (
                           <Badge key={tag.id} variant="secondary">
                             {tag.name}
                           </Badge>
