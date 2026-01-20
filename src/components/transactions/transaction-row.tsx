@@ -19,6 +19,17 @@ export interface Transaction {
   account: {
     name: string
   }
+  employee?: {
+    id: string
+    name: string
+    role?: string | null
+  } | null
+  category?: {
+    id: string
+    name: string
+    icon?: string | null
+    color?: string | null
+  } | null
   tags: Array<{
     tag: {
       id: string
@@ -42,6 +53,35 @@ export function TransactionRow({ transaction }: TransactionRowProps) {
     <TableRow>
       <TableCell>{format(transaction.date, "PPP")}</TableCell>
       <TableCell className="font-medium">{transaction.description}</TableCell>
+      <TableCell>
+        {transaction.employee ? (
+          <div className="flex flex-col">
+            <span className="text-sm font-medium">{transaction.employee.name}</span>
+            {transaction.employee.role && (
+              <span className="text-xs text-muted-foreground">{transaction.employee.role}</span>
+            )}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {transaction.category ? (
+          <Badge
+            variant="secondary"
+            style={{
+              backgroundColor: transaction.category.color ? `${transaction.category.color}20` : undefined,
+              color: transaction.category.color || undefined,
+              borderColor: transaction.category.color || undefined,
+            }}
+            className="border"
+          >
+            {transaction.category.name}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </TableCell>
       <TableCell>{transaction.account.name}</TableCell>
       <TableCell>
         <div className="flex items-center gap-2">

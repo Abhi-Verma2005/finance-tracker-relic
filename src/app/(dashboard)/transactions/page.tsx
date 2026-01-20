@@ -22,13 +22,14 @@ export default async function TransactionsPage({
   const session = await auth()
 
   // Fetch all data in parallel
-  const [incomes, expenditures, accounts, tags] = await Promise.all([
+  const [incomes, expenditures, accounts, tags, employees, categories] = await Promise.all([
     db.income.findMany({
       where: {
         companyId: session?.user?.companyId,
       },
       include: {
         account: true,
+        category: true,
         tags: {
           include: {
             tag: true,
@@ -42,6 +43,8 @@ export default async function TransactionsPage({
       },
       include: {
         account: true,
+        employee: true,
+        category: true,
         tags: {
           include: {
             tag: true,
@@ -54,6 +57,19 @@ export default async function TransactionsPage({
     }),
     db.tag.findMany({
       where: { companyId: session?.user?.companyId },
+    }),
+    db.employee.findMany({
+      where: { companyId: session?.user?.companyId, status: "ACTIVE" },
+      orderBy: { name: "asc" },
+    }),
+    db.category.findMany({
+      where: {
+        OR: [
+          { companyId: session?.user?.companyId },
+          { companyId: null, isSystem: true },
+        ],
+      },
+      orderBy: { name: "asc" },
     }),
   ])
 
@@ -121,8 +137,8 @@ export default async function TransactionsPage({
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Transaction Logs</h1>
         <div className="flex gap-2">
-          <IncomeDialog accounts={accounts} tags={tags} />
-          <ExpenditureDialog accounts={accounts} tags={tags} />
+          <IncomeDialog accounts={accounts} tags={tags} categories={categories} />
+          <ExpenditureDialog accounts={accounts} tags={tags} employees={employees} categories={categories} />
         </div>
       </div>
 
@@ -158,9 +174,8 @@ export default async function TransactionsPage({
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold ${
-                netFlow >= 0 ? "text-green-500" : "text-red-500"
-              }`}
+              className={`text-2xl font-bold ${netFlow >= 0 ? "text-green-500" : "text-red-500"
+                }`}
             >
               {netFlow >= 0 ? "+" : ""}${netFlow.toFixed(2)}
             </div>
@@ -189,6 +204,8 @@ export default async function TransactionsPage({
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Employee</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Account</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Tags</TableHead>
@@ -199,7 +216,7 @@ export default async function TransactionsPage({
             <TableBody>
               {filteredTransactions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
+                  <TableCell colSpan={9} className="text-center">
                     No transactions found.
                   </TableCell>
                 </TableRow>
