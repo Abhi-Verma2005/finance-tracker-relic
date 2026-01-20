@@ -55,7 +55,7 @@ export function TransactionFilters({ accounts, tags }: TransactionFiltersProps) 
 
   const handleAccountChange = (value: string) => {
     const params = new URLSearchParams(searchParams)
-    if (!value) {
+    if (value === "all") {
       params.delete("account")
     } else {
       params.set("account", value)
@@ -95,12 +95,12 @@ export function TransactionFilters({ accounts, tags }: TransactionFiltersProps) 
         </SelectContent>
       </Select>
 
-      <Select onValueChange={handleAccountChange} defaultValue={accountFilter}>
+      <Select onValueChange={handleAccountChange} defaultValue={accountFilter || "all"}>
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="All Accounts" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Accounts</SelectItem>
+          <SelectItem value="all">All Accounts</SelectItem>
           {accounts.map((account) => (
             <SelectItem key={account.id} value={account.id}>
               {account.name}
