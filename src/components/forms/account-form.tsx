@@ -23,10 +23,9 @@ import {
 } from "@/components/ui/select"
 import { toast } from "sonner"
 import { useState } from "react"
-import { Account } from "@prisma/client"
 
 interface AccountFormProps {
-  account?: Account
+  account?: any
   onSuccess?: () => void
 }
 

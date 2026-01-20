@@ -9,13 +9,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal, Pencil, Trash } from "lucide-react"
-import { Tag } from "@prisma/client"
 import { useState } from "react"
 import { TagDialog } from "./tag-dialog"
 import { deleteTag } from "@/actions/tags"
 import { toast } from "sonner"
 
-export function TagActions({ tag }: { tag: Tag }) {
+export function TagActions({ tag }: { tag: any }) {
   const [showEditDialog, setShowEditDialog] = useState(false)
 
   async function handleDelete() {

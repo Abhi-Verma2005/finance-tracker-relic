@@ -12,10 +12,9 @@ import {
 import { TagForm } from "@/components/forms/tag-form"
 import { useState } from "react"
 import { Plus } from "lucide-react"
-import { Tag } from "@prisma/client"
 
 interface TagDialogProps {
-  tag?: Tag
+  tag?: any
   trigger?: React.ReactNode
   open?: boolean
   onOpenChange?: (open: boolean) => void

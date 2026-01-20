@@ -12,11 +12,10 @@ import {
 import { ExpenditureForm } from "@/components/forms/expenditure-form"
 import { useState } from "react"
 import { Plus } from "lucide-react"
-import { Account, Tag } from "@prisma/client"
 
 interface ExpenditureDialogProps {
-  accounts: Account[]
-  tags: Tag[]
+  accounts: any[]
+  tags: any[]
 }
 
 export function ExpenditureDialog({ accounts, tags }: ExpenditureDialogProps) {

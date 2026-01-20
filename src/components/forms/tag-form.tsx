@@ -16,10 +16,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { useState } from "react"
-import { Tag } from "@prisma/client"
 
 interface TagFormProps {
-  tag?: Tag
+  tag?: any
   onSuccess?: () => void
 }
 

@@ -9,13 +9,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal, Pencil, Trash } from "lucide-react"
-import { Account } from "@prisma/client"
 import { useState } from "react"
 import { AccountDialog } from "./account-dialog"
 import { deleteAccount } from "@/actions/accounts"
 import { toast } from "sonner"
 
-export function AccountActions({ account }: { account: Account }) {
+export function AccountActions({ account }: { account: any }) {
   const [showEditDialog, setShowEditDialog] = useState(false)
 
   async function handleDelete() {

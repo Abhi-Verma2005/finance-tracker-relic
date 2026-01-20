@@ -12,10 +12,9 @@ import {
 import { AccountForm } from "@/components/forms/account-form"
 import { useState } from "react"
 import { Plus } from "lucide-react"
-import { Account } from "@prisma/client"
 
 interface AccountDialogProps {
-  account?: Account
+  account?: any
   trigger?: React.ReactNode
   open?: boolean
   onOpenChange?: (open: boolean) => void

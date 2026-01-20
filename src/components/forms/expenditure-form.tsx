@@ -32,7 +32,6 @@ import { format } from "date-fns"
 import { CalendarIcon, Check } from "lucide-react"
 import { toast } from "sonner"
 import { useState } from "react"
-import { Account, Tag } from "@prisma/client"
 import {
   Command,
   CommandEmpty,
@@ -43,8 +42,8 @@ import {
 } from "@/components/ui/command"
 
 interface ExpenditureFormProps {
-  accounts: Account[]
-  tags: Tag[]
+  accounts: any[]
+  tags: any[]
   onSuccess?: () => void
 }
 
@@ -167,7 +166,7 @@ export function ExpenditureForm({ accounts, tags, onSuccess }: ExpenditureFormPr
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {accounts.map((account) => (
+                  {accounts.map((account: any) => (
                     <SelectItem key={account.id} value={account.id}>
                       {account.name} (${account.balance.toFixed(2)})
                     </SelectItem>
@@ -208,7 +207,7 @@ export function ExpenditureForm({ accounts, tags, onSuccess }: ExpenditureFormPr
                     <CommandList>
                       <CommandEmpty>No tags found.</CommandEmpty>
                       <CommandGroup>
-                        {tags.map((tag) => (
+                        {tags.map((tag: any) => (
                           <CommandItem
                             key={tag.id}
                             value={tag.name}
