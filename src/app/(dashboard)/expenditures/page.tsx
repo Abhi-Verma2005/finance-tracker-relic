@@ -13,6 +13,19 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
+import { Prisma } from "@prisma/client"
+
+// Define a type that includes the relations we are fetching
+type ExpenditureWithRelations = Prisma.ExpenditureGetPayload<{
+  include: {
+    account: true;
+    tags: {
+      include: {
+        tag: true;
+      };
+    };
+  };
+}>;
 
 export default async function ExpendituresPage() {
   const session = await auth()
@@ -73,14 +86,14 @@ export default async function ExpendituresPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                expenditures.map((exp: any) => (
+                expenditures.map((exp: ExpenditureWithRelations) => (
                   <TableRow key={exp.id}>
                     <TableCell>{format(exp.date, "PPP")}</TableCell>
                     <TableCell className="font-medium">{exp.description}</TableCell>
                     <TableCell>{exp.account.name}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {exp.tags.map(({ tag }: any) => (
+                        {exp.tags.map(({ tag }) => (
                           <Badge key={tag.id} variant="secondary">
                             {tag.name}
                           </Badge>
