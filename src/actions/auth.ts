@@ -2,7 +2,6 @@
 
 import { signIn } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { PrismaClient } from "@prisma/client"
 import { loginSchema, signupSchema, SignupData, LoginData } from "@/lib/schemas"
 import bcrypt from "bcryptjs"
 import { AuthError } from "next-auth"

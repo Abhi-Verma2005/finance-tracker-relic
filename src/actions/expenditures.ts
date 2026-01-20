@@ -2,7 +2,6 @@
 
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { PrismaClient } from "@prisma/client"
 import { expenditureSchema, ExpenditureData } from "@/lib/schemas"
 import { revalidatePath } from "next/cache"
 
