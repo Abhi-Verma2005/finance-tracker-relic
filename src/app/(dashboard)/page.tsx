@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { OverviewChart } from "@/components/dashboard/overview-chart"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { startOfMonth } from "date-fns"
+import { Wallet, TrendingUp, TrendingDown, Activity } from "lucide-react"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -76,53 +77,65 @@ export default async function DashboardPage() {
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
-      
-      <div className="grid gap-4 md:grid-cols-4">
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">
+          Overview of your finances
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Balance</CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalBalance.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              Across {accounts.length} accounts
+            <div className="text-2xl font-bold">${totalBalance.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {accounts.length} account{accounts.length !== 1 ? 's' : ''}
             </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Income</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">+${monthlyIncome.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              For {currentMonthStart.toLocaleString('default', { month: 'long' })}
+            <div className="text-2xl font-bold text-green-600">+${monthlyIncome.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {currentMonthStart.toLocaleString('default', { month: 'long' })}
             </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Spending</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Spending</CardTitle>
+            <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">-${monthlySpending.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              For {currentMonthStart.toLocaleString('default', { month: 'long' })}
+            <div className="text-2xl font-bold text-red-600">-${monthlySpending.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {currentMonthStart.toLocaleString('default', { month: 'long' })}
             </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Flow</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Net Flow</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${monthlyNetFlow >= 0 ? "text-green-500" : "text-red-500"}`}>
-              {monthlyNetFlow >= 0 ? "+" : ""}${monthlyNetFlow.toFixed(2)}
+            <div className={`text-2xl font-bold ${monthlyNetFlow >= 0 ? "text-green-600" : "text-red-600"}`}>
+              {monthlyNetFlow >= 0 ? "+" : ""}${Math.abs(monthlyNetFlow).toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              For {currentMonthStart.toLocaleString('default', { month: 'long' })}
+            <p className="text-xs text-muted-foreground mt-1">
+              {currentMonthStart.toLocaleString('default', { month: 'long' })}
             </p>
           </CardContent>
         </Card>
@@ -132,6 +145,9 @@ export default async function DashboardPage() {
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Spending by Account</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Distribution of expenses
+            </p>
           </CardHeader>
           <CardContent className="pl-2">
             <OverviewChart data={spendingByAccount} />
@@ -140,6 +156,9 @@ export default async function DashboardPage() {
         <Card className="col-span-3">
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Latest activity
+            </p>
           </CardHeader>
           <CardContent>
             <RecentTransactions data={recentTransactions} />

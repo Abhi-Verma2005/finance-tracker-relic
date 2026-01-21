@@ -17,53 +17,55 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="w-full md:w-64 bg-background border-r p-6 flex flex-col">
+    <div className="flex min-h-screen flex-col md:flex-row bg-background">
+      <aside className="w-full md:w-64 border-r border-border p-6 flex flex-col">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold">Finance Tracker</h1>
-          <p className="text-sm text-muted-foreground mt-1">{session.user?.name}</p>
-          <p className="text-xs text-muted-foreground">{session.user?.email}</p>
+          <h1 className="text-2xl font-bold">
+            Finance Tracker
+          </h1>
+          <p className="text-sm text-muted-foreground mt-2">{session.user?.name}</p>
+          <p className="text-xs text-muted-foreground/70">{session.user?.email}</p>
         </div>
 
-        <nav className="flex-1 space-y-2">
-          <Link href="/" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <LayoutDashboard size={20} />
+        <nav className="flex-1 space-y-1">
+          <Link href="/" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <LayoutDashboard className="h-4 w-4" />
             <span>Dashboard</span>
           </Link>
-          <Link href="/accounts" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <Wallet size={20} />
+          <Link href="/accounts" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <Wallet className="h-4 w-4" />
             <span>Accounts</span>
           </Link>
-          <Link href="/employees" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <Users size={20} />
+          <Link href="/employees" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <Users className="h-4 w-4" />
             <span>Employees</span>
           </Link>
-          <Link href="/expenditures" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <Receipt size={20} />
+          <Link href="/expenditures" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <Receipt className="h-4 w-4" />
             <span>Expenditures</span>
           </Link>
-          <Link href="/incomes" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <TrendingUp size={20} />
+          <Link href="/incomes" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <TrendingUp className="h-4 w-4" />
             <span>Income</span>
           </Link>
-          <Link href="/transactions" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <ListFilter size={20} />
+          <Link href="/transactions" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <ListFilter className="h-4 w-4" />
             <span>Transactions</span>
           </Link>
-          <Link href="/categories" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <FolderTree size={20} />
+          <Link href="/categories" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <FolderTree className="h-4 w-4" />
             <span>Categories</span>
           </Link>
-          <Link href="/tags" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <Tags size={20} />
+          <Link href="/tags" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <Tags className="h-4 w-4" />
             <span>Tags</span>
           </Link>
-          <Link href="/recurring-transactions" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <Repeat size={20} />
+          <Link href="/recurring-transactions" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <Repeat className="h-4 w-4" />
             <span>Recurring</span>
           </Link>
-          <Link href="/reports" className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-accent-foreground rounded">
-            <BarChart3 size={20} />
+          <Link href="/reports" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <BarChart3 className="h-4 w-4" />
             <span>Reports</span>
           </Link>
         </nav>
@@ -75,16 +77,18 @@ export default async function DashboardLayout({
               await signOut()
             }}
           >
-            <Button variant="ghost" className="w-full justify-start p-2 text-red-500 hover:text-red-400 hover:bg-accent">
-              <LogOut size={20} className="mr-2" />
+            <Button variant="ghost" className="w-full justify-start gap-3 px-3 py-2 text-sm font-medium text-destructive hover:text-destructive hover:bg-destructive/10 rounded-md">
+              <LogOut className="h-4 w-4" />
               Logout
             </Button>
           </form>
         </div>
       </aside>
 
-      <main className="flex-1 bg-background p-8 overflow-y-auto">
-        {children}
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
       </main>
     </div>
   )
