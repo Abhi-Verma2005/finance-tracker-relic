@@ -61,10 +61,106 @@ export async function createExpenditure(data: ExpenditureData) {
     revalidatePath("/accounts")
     revalidatePath("/employees")
     revalidatePath("/")
+    revalidatePath("/admin")
+    revalidatePath("/admin/transactions")
     return { success: true }
   } catch (error) {
     console.error(error)
     return { error: "Failed to create expenditure" }
+  }
+}
+
+export async function updateExpenditure(id: string, data: ExpenditureData) {
+  const session = await auth()
+  if (!session?.user?.companyId) {
+    return { error: "Unauthorized" }
+  }
+
+  const validatedFields = expenditureSchema.safeParse(data)
+  if (!validatedFields.success) {
+    return { error: "Invalid fields" }
+  }
+
+  const { amount, description, date, accountId, tagIds, employeeId, categoryId } = validatedFields.data
+
+  // Get existing expenditure
+  const existing = await db.expenditure.findUnique({
+    where: { id, companyId: session.user.companyId },
+    include: { tags: true },
+  })
+
+  if (!existing) {
+    return { error: "Expenditure not found" }
+  }
+
+  // Validate new account
+  const account = await db.account.findUnique({
+    where: { id: accountId, companyId: session.user.companyId },
+  })
+
+  if (!account) {
+    return { error: "Invalid account selected" }
+  }
+
+  try {
+    await db.$transaction(async (tx: any) => {
+      // If account changed or amount changed, adjust balances
+      if (existing.accountId !== accountId || existing.amount !== amount) {
+        // Refund old account
+        await tx.account.update({
+          where: { id: existing.accountId },
+          data: {
+            balance: {
+              increment: existing.amount,
+            },
+          },
+        })
+
+        // Deduct from new account
+        await tx.account.update({
+          where: { id: accountId },
+          data: {
+            balance: {
+              decrement: amount,
+            },
+          },
+        })
+      }
+
+      // Delete existing tags
+      await tx.expenditureTag.deleteMany({
+        where: { expenditureId: id },
+      })
+
+      // Update expenditure
+      await tx.expenditure.update({
+        where: { id },
+        data: {
+          amount,
+          description,
+          date,
+          accountId,
+          employeeId: employeeId || null,
+          categoryId: categoryId || null,
+          tags: {
+            create: tagIds?.map((tagId) => ({
+              tag: { connect: { id: tagId } },
+            })),
+          },
+        },
+      })
+    })
+
+    revalidatePath("/expenditures")
+    revalidatePath("/accounts")
+    revalidatePath("/employees")
+    revalidatePath("/")
+    revalidatePath("/admin")
+    revalidatePath("/admin/transactions")
+    return { success: true }
+  } catch (error) {
+    console.error(error)
+    return { error: "Failed to update expenditure" }
   }
 }
 
@@ -104,6 +200,8 @@ export async function deleteExpenditure(id: string) {
     revalidatePath("/accounts")
     revalidatePath("/employees")
     revalidatePath("/")
+    revalidatePath("/admin")
+    revalidatePath("/admin/transactions")
     return { success: true }
   } catch (error) {
     return { error: "Failed to delete expenditure" }

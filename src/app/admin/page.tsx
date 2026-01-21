@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { OverviewChart } from "@/components/dashboard/overview-chart"
+import { DashboardCharts } from "@/components/dashboard/dashboard-charts"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { startOfMonth } from "date-fns"
 import { Wallet, TrendingUp, TrendingDown, Activity } from "lucide-react"
@@ -50,19 +50,6 @@ export default async function DashboardPage() {
     .reduce((acc: number, curr: any) => acc + curr.amount, 0)
 
   const monthlyNetFlow = monthlyIncome - monthlySpending
-
-  // Chart Data: Spending by Account
-  // Actually, expenditures don't have account name directly, but accounts do.
-  // We can sum expenditures by accountId.
-  const spendingByAccount = accounts.map((acc: any) => {
-    const total = expenditures
-      .filter((exp: any) => exp.accountId === acc.id)
-      .reduce((sum: number, exp: any) => sum + exp.amount, 0)
-    return {
-      name: acc.name,
-      total,
-    }
-  })
 
   // Combine recent transactions
   const recentTransactions = [
@@ -141,30 +128,19 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Spending by Account</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Distribution of expenses
-            </p>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <OverviewChart data={spendingByAccount} />
-          </CardContent>
-        </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Latest activity
-            </p>
-          </CardHeader>
-          <CardContent>
-            <RecentTransactions data={recentTransactions} />
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardCharts />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Latest activity
+          </p>
+        </CardHeader>
+        <CardContent>
+          <RecentTransactions data={recentTransactions} />
+        </CardContent>
+      </Card>
     </div>
   )
 }
