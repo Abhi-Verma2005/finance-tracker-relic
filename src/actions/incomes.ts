@@ -18,6 +18,15 @@ export async function createIncome(data: IncomeData) {
 
   const { amount, description, date, accountId, tagIds, categoryId } = validatedFields.data
 
+  // Validate account exists and belongs to user's company
+  const account = await db.account.findUnique({
+    where: { id: accountId, companyId: session.user.companyId },
+  })
+
+  if (!account) {
+    return { error: "Invalid account selected" }
+  }
+
   try {
     await db.$transaction(async (tx: any) => {
       // Create income

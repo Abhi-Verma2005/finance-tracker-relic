@@ -92,12 +92,12 @@ export default async function TransactionsPage({
   )
 
   // Apply filters
-  const typeFilter = searchParams.type ? String(searchParams.type) : "all"
-  const accountFilter = searchParams.account ? String(searchParams.account) : ""
-  const tagFilters = searchParams.tags
-    ? Array.isArray(searchParams.tags)
-      ? searchParams.tags
-      : [searchParams.tags]
+  const typeFilter = params.type ? String(params.type) : "all"
+  const accountFilter = params.account ? String(params.account) : ""
+  const tagFilters = params.tags
+    ? Array.isArray(params.tags)
+      ? params.tags
+      : [params.tags]
     : []
 
   let filteredTransactions = transactions

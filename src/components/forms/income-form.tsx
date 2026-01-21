@@ -58,6 +58,7 @@ export function IncomeForm({ accounts, tags, categories = [], onSuccess }: Incom
     defaultValues: {
       description: "",
       amount: 0,
+      accountId: "",
       tagIds: [],
       categoryId: undefined,
     },

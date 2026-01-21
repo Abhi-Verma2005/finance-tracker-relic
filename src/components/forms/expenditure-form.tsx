@@ -60,6 +60,7 @@ export function ExpenditureForm({ accounts, tags, employees = [], categories = [
     defaultValues: {
       description: "",
       amount: 0,
+      accountId: "",
       tagIds: [],
       employeeId: undefined,
       categoryId: undefined,
