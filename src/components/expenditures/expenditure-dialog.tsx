@@ -18,27 +18,57 @@ interface ExpenditureDialogProps {
   tags: any[]
   employees?: any[]
   categories?: any[]
+  initialData?: any
+  id?: string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  children?: React.ReactNode
+  showTrigger?: boolean
 }
 
-export function ExpenditureDialog({ accounts, tags, employees = [], categories = [] }: ExpenditureDialogProps) {
-  const [open, setOpen] = useState(false)
+export function ExpenditureDialog({ 
+  accounts, 
+  tags, 
+  employees = [], 
+  categories = [], 
+  initialData,
+  id,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  children,
+  showTrigger = true
+}: ExpenditureDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = isControlled && controlledOnOpenChange ? controlledOnOpenChange : setInternalOpen
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Log Expense
-        </Button>
-      </DialogTrigger>
+      {showTrigger ? (
+        children ? (
+          <DialogTrigger asChild>
+            {children}
+          </DialogTrigger>
+        ) : (
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Log Expense
+            </Button>
+          </DialogTrigger>
+        )
+      ) : null}
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Log Expenditure</DialogTitle>
+          <DialogTitle>{id ? "Edit Expenditure" : "Log Expenditure"}</DialogTitle>
           <DialogDescription>
-            Record a new expense and deduct from account balance.
+            {id ? "Update expense details." : "Record a new expense and deduct from account balance."}
           </DialogDescription>
         </DialogHeader>
         <ExpenditureForm
+          id={id}
+          initialData={initialData}
           accounts={accounts}
           tags={tags}
           employees={employees}

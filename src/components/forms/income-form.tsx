@@ -3,7 +3,7 @@
 import { useForm, Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { incomeSchema, IncomeData } from "@/lib/schemas"
-import { createIncome } from "@/actions/incomes"
+import { createIncome, updateIncome } from "@/actions/incomes"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -42,13 +42,15 @@ import {
 } from "@/components/ui/command"
 
 interface IncomeFormProps {
+  id?: string
+  initialData?: Partial<IncomeData>
   accounts: any[]
   tags: any[]
   categories?: any[]
   onSuccess?: () => void
 }
 
-export function IncomeForm({ accounts, tags, categories = [], onSuccess }: IncomeFormProps) {
+export function IncomeForm({ id, initialData, accounts, tags, categories = [], onSuccess }: IncomeFormProps) {
   const [isPending, setIsPending] = useState(false)
   const [openTags, setOpenTags] = useState(false)
   const [openCategory, setOpenCategory] = useState(false)
@@ -327,7 +329,7 @@ export function IncomeForm({ accounts, tags, categories = [], onSuccess }: Incom
         />
 
         <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? "Logging..." : "Log Income"}
+          {isPending ? "Saving..." : (id ? "Update Income" : "Log Income")}
         </Button>
       </form>
     </Form>

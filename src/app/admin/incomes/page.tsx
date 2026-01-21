@@ -115,7 +115,12 @@ export default async function IncomesPage() {
                       +${income.amount.toFixed(2)}
                     </TableCell>
                     <TableCell>
-                      <IncomeActions id={income.id} />
+                      <IncomeActions 
+                        transaction={income}
+                        accounts={accounts}
+                        tags={tags}
+                        categories={categories}
+                      />
                     </TableCell>
                   </TableRow>
                 ))

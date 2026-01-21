@@ -40,9 +40,13 @@ export interface Transaction {
 
 interface TransactionRowProps {
   transaction: Transaction
+  accounts?: any[]
+  tags?: any[]
+  categories?: any[]
+  employees?: any[]
 }
 
-export function TransactionRow({ transaction }: TransactionRowProps) {
+export function TransactionRow({ transaction, accounts = [], tags = [], categories = [], employees = [] }: TransactionRowProps) {
   const isIncome = transaction.type === "INCOME"
   const amountColor = isIncome ? "text-green-500" : "text-red-500"
   const badgeVariant = isIncome ? "default" : "destructive"
@@ -105,9 +109,20 @@ export function TransactionRow({ transaction }: TransactionRowProps) {
       </TableCell>
       <TableCell>
         {isIncome ? (
-          <IncomeActions id={transaction.id} />
+          <IncomeActions 
+            transaction={transaction} 
+            accounts={accounts} 
+            tags={tags} 
+            categories={categories} 
+          />
         ) : (
-          <ExpenditureActions id={transaction.id} />
+          <ExpenditureActions 
+            transaction={transaction} 
+            accounts={accounts} 
+            tags={tags} 
+            categories={categories}
+            employees={employees}
+          />
         )}
       </TableCell>
     </TableRow>

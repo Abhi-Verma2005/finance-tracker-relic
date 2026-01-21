@@ -133,7 +133,13 @@ export default async function ExpendituresPage() {
                       -${exp.amount.toFixed(2)}
                     </TableCell>
                     <TableCell>
-                      <ExpenditureActions id={exp.id} />
+                      <ExpenditureActions 
+                        transaction={exp}
+                        accounts={accounts}
+                        tags={tags}
+                        employees={employees}
+                        categories={categories}
+                      />
                     </TableCell>
                   </TableRow>
                 ))

@@ -3,7 +3,7 @@
 import { useForm, Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { expenditureSchema, ExpenditureData } from "@/lib/schemas"
-import { createExpenditure } from "@/actions/expenditures"
+import { createExpenditure, updateExpenditure } from "@/actions/expenditures"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -42,6 +42,8 @@ import {
 } from "@/components/ui/command"
 
 interface ExpenditureFormProps {
+  id?: string
+  initialData?: Partial<ExpenditureData>
   accounts: any[]
   tags: any[]
   employees?: any[]
@@ -49,7 +51,7 @@ interface ExpenditureFormProps {
   onSuccess?: () => void
 }
 
-export function ExpenditureForm({ accounts, tags, employees = [], categories = [], onSuccess }: ExpenditureFormProps) {
+export function ExpenditureForm({ id, initialData, accounts, tags, employees = [], categories = [], onSuccess }: ExpenditureFormProps) {
   const [isPending, setIsPending] = useState(false)
   const [openTags, setOpenTags] = useState(false)
   const [openEmployee, setOpenEmployee] = useState(false)
@@ -58,24 +60,28 @@ export function ExpenditureForm({ accounts, tags, employees = [], categories = [
   const form = useForm<ExpenditureData>({
     resolver: zodResolver(expenditureSchema) as unknown as Resolver<ExpenditureData>,
     defaultValues: {
-      description: "",
-      amount: 0,
-      accountId: "",
-      tagIds: [],
-      employeeId: undefined,
-      categoryId: undefined,
+      description: initialData?.description || "",
+      amount: initialData?.amount || 0,
+      accountId: initialData?.accountId || "",
+      tagIds: initialData?.tagIds || [],
+      employeeId: initialData?.employeeId || undefined,
+      categoryId: initialData?.categoryId || undefined,
+      date: initialData?.date ? new Date(initialData.date) : undefined,
     },
   })
 
   async function onSubmit(data: ExpenditureData) {
     setIsPending(true)
     try {
-      const result = await createExpenditure(data)
+      const result = id 
+        ? await updateExpenditure(id, data)
+        : await createExpenditure(data)
 
       if (result?.error) {
         toast.error(result.error)
       } else {
-        toast.success("Expenditure logged")
+        toast.success(id ? "Expenditure updated" : "Expenditure logged")
+        if (!id) form.reset()
         if (onSuccess) onSuccess()
       }
     } catch (error) {
@@ -410,7 +416,7 @@ export function ExpenditureForm({ accounts, tags, employees = [], categories = [
         />
 
         <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? "Logging..." : "Log Expenditure"}
+          {isPending ? "Saving..." : (id ? "Update Expenditure" : "Log Expenditure")}
         </Button>
       </form>
     </Form>

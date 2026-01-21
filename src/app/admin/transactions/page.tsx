@@ -4,6 +4,7 @@ import { TransactionRow, Transaction } from "@/components/transactions/transacti
 import { TransactionFilters } from "@/components/transactions/transaction-filters"
 import { IncomeDialog } from "@/components/incomes/income-dialog"
 import { ExpenditureDialog } from "@/components/expenditures/expenditure-dialog"
+import { PaginationControls } from "@/components/ui/pagination-controls"
 import {
   Table,
   TableBody,
@@ -133,6 +134,14 @@ export default async function TransactionsPage({
 
   const netFlow = incomeTotal - expenseTotal
 
+  // Pagination
+  const page = Number(params.page) || 1
+  const limit = 20
+  const start = (page - 1) * limit
+  const end = start + limit
+  const paginatedTransactions = filteredTransactions.slice(start, end)
+  const totalPages = Math.ceil(filteredTransactions.length / limit)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -215,22 +224,27 @@ export default async function TransactionsPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTransactions.length === 0 ? (
+              {paginatedTransactions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center">
                     No transactions found.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredTransactions.map((transaction) => (
+                paginatedTransactions.map((transaction) => (
                   <TransactionRow
                     key={`${transaction.type}-${transaction.id}`}
                     transaction={transaction}
+                    accounts={accounts}
+                    tags={tags}
+                    categories={categories}
+                    employees={employees}
                   />
                 ))
               )}
             </TableBody>
           </Table>
+          <PaginationControls currentPage={page} totalPages={totalPages} />
         </CardContent>
       </Card>
     </div>
