@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 
 const statusColors: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
@@ -124,14 +125,16 @@ export default async function EmployeesPage() {
                 employees.map((employee: any) => (
                   <TableRow key={employee.id}>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{employee.name}</p>
-                        {employee.email && (
-                          <p className="text-sm text-muted-foreground">
-                            {employee.email}
-                          </p>
-                        )}
-                      </div>
+                      <Link href={`/admin/employees/${employee.id}`} className="hover:underline">
+                        <div>
+                          <p className="font-medium text-primary">{employee.name}</p>
+                          {employee.email && (
+                            <p className="text-sm text-muted-foreground">
+                              {employee.email}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
                     </TableCell>
                     <TableCell>{typeLabels[employee.employeeType]}</TableCell>
                     <TableCell>{employee.role || "-"}</TableCell>

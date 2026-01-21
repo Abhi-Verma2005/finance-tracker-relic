@@ -17,9 +17,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const session = await auth()
+  const params = await searchParams
 
   // Fetch all data in parallel
   const [incomes, expenditures, accounts, tags, employees, categories] = await Promise.all([

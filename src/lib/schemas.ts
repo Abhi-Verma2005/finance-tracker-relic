@@ -25,6 +25,7 @@ export const tagSchema = z.object({
 export const employeeSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal("")),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).optional().or(z.literal("")),
   phone: z.string().optional(),
   role: z.string().optional(),
   department: z.string().optional(),
@@ -74,6 +75,24 @@ export const recurringTransactionSchema = z.object({
   categoryId: z.string().optional(),
 })
 
+export const projectSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  description: z.string().optional(),
+  status: z.enum(["PLANNING", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"]).default("PLANNING"),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+})
+
+export const taskSchema = z.object({
+  title: z.string().min(2, { message: "Title must be at least 2 characters" }),
+  description: z.string().optional(),
+  status: z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "COMPLETED", "CANCELLED"]).default("TODO"),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
+  dueDate: z.date().optional(),
+  projectId: z.string().min(1, { message: "Project is required" }),
+  assigneeId: z.string().optional(),
+})
+
 export type LoginData = z.infer<typeof loginSchema>
 export type SignupData = z.infer<typeof signupSchema>
 export type AccountData = z.infer<typeof accountSchema>
@@ -83,3 +102,5 @@ export type CategoryData = z.infer<typeof categorySchema>
 export type ExpenditureData = z.infer<typeof expenditureSchema>
 export type IncomeData = z.infer<typeof incomeSchema>
 export type RecurringTransactionData = z.infer<typeof recurringTransactionSchema>
+export type ProjectData = z.infer<typeof projectSchema>
+export type TaskData = z.infer<typeof taskSchema>

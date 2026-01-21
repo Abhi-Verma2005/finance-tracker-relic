@@ -47,6 +47,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
     defaultValues: {
       name: employee?.name || "",
       email: employee?.email || "",
+      password: "",
       phone: employee?.phone || "",
       role: employee?.role || "",
       department: employee?.department || "",
@@ -100,7 +101,7 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Email {!employee && "*"}</FormLabel>
                 <FormControl>
                   <Input type="email" placeholder="john@example.com" {...field} />
                 </FormControl>
@@ -109,6 +110,27 @@ export function EmployeeForm({ employee, onSuccess }: EmployeeFormProps) {
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Password {!employee && "*"}
+                {employee && " (leave blank to keep unchanged)"}
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder={employee ? "••••••••" : "Enter password"}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <FormField

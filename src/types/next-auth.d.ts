@@ -9,11 +9,18 @@ declare module "next-auth" {
     user: {
       id: string
       companyId: string
+      userType: 'ADMIN' | 'EMPLOYEE'
+      employeeId?: string
     } & DefaultSession["user"]
   }
 
   interface User {
+    id: string
+    email: string
+    name?: string
     companyId?: string | null
+    userType: 'ADMIN' | 'EMPLOYEE'
+    employeeId?: string
   }
 }
 
@@ -22,5 +29,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string
     companyId: string
+    userType: 'ADMIN' | 'EMPLOYEE'
+    employeeId?: string
   }
 }
