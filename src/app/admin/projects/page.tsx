@@ -1,7 +1,9 @@
 import { getProjects } from "@/actions/projects"
 import { ProjectCard } from "@/components/projects/project-card"
 import { ProjectDialog } from "@/components/projects/project-dialog"
-import { FolderKanban } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { FolderKanban, Plus } from "lucide-react"
+import Link from "next/link"
 
 export default async function ProjectsPage() {
   const projects = await getProjects()
@@ -15,7 +17,12 @@ export default async function ProjectsPage() {
             Manage your projects and tasks
           </p>
         </div>
-        <ProjectDialog />
+        <Link href="/admin/projects/new">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            New Project
+          </Button>
+        </Link>
       </div>
 
       {projects.length === 0 ? (
@@ -27,7 +34,12 @@ export default async function ProjectsPage() {
           <p className="text-muted-foreground mb-4 max-w-sm">
             Get started by creating your first project to organize tasks and track progress
           </p>
-          <ProjectDialog />
+          <Link href="/admin/projects/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Your First Project
+            </Button>
+          </Link>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

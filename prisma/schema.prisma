@@ -9,19 +9,47 @@ datasource db {
 enum UserType {
   ADMIN
   EMPLOYEE
+  CLIENT
+}
+
+// CRM Enums
+enum DocumentType {
+  CONTRACT
+  INVOICE
+  DESIGN
+  SOW
+  REPORT
+  IMAGE
+  VIDEO
+  OTHER
+}
+
+enum LogSource {
+  MANUAL
+  AUTO_TASK_COMPLETE
+}
+
+enum ProjectRole {
+  LEAD
+  DEVELOPER
+  REVIEWER
+  DESIGNER
+  QA
 }
 
 model User {
-  id         String    @id @default(cuid())
-  email      String    @unique
+  id         String     @id @default(cuid())
+  email      String     @unique
   password   String
   name       String?
-  userType   UserType  @default(ADMIN)
+  userType   UserType   @default(ADMIN)
   companyId  String?
-  company    Company?  @relation(fields: [companyId], references: [id])
-  employeeId String?   @unique
-  employee   Employee? @relation(fields: [employeeId], references: [id])
-  createdAt  DateTime  @default(now())
+  company    Company?   @relation(fields: [companyId], references: [id])
+  employeeId String?    @unique
+  employee   Employee?  @relation(fields: [employeeId], references: [id])
+  documents  Document[]
+  comments   Comment[]
+  createdAt  DateTime   @default(now())
 }
 
 model Company {
@@ -36,6 +64,7 @@ model Company {
   categories            Category[]
   recurringTransactions RecurringTransaction[]
   projects              Project[]
+  clients               Client[]
   createdAt             DateTime               @default(now())
 }
 
@@ -72,6 +101,9 @@ model Employee {
   expenditures          Expenditure[]
   recurringTransactions RecurringTransaction[]
   tasksAssigned         Task[]
+  dailyLogs             DailyLog[]
+  taskAssignees         TaskAssignee[]
+  projectEmployees      ProjectEmployee[]
   createdAt             DateTime               @default(now())
 }
 
@@ -153,6 +185,8 @@ model Tag {
   name         String
   companyId    String
   company      Company          @relation(fields: [companyId], references: [id])
+  projectId    String?          @unique
+  project      Project?         @relation(fields: [projectId], references: [id])
   expenditures ExpenditureTag[]
   incomes      IncomeTag[]
   createdAt    DateTime         @default(now())
@@ -226,9 +260,24 @@ model Project {
   endDate     DateTime?
   companyId   String
   company     Company       @relation(fields: [companyId], references: [id])
-  tasks       Task[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+
+  // CRM additions (all optional for backward compatibility)
+  clientId           String?
+  client             Client? @relation("ClientProjects", fields: [clientId], references: [id])
+  hasUpworkTimesheet Boolean @default(false)
+  upworkContractUrl  String?
+
+  // Relations
+  tasks            Task[]
+  documents        Document[]
+  dailyLogs        DailyLog[]
+  modules          Module[]
+  comments         Comment[]
+  projectEmployees ProjectEmployee[]
+  tag              Tag?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum TaskStatus {
@@ -255,9 +304,141 @@ model Task {
   dueDate     DateTime?
   projectId   String
   project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  assigneeId  String?
-  assignee    Employee?    @relation(fields: [assigneeId], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+
+  // Keep existing single assignee for backward compatibility (NO DATA LOSS)
+  assigneeId String?
+  assignee   Employee? @relation(fields: [assigneeId], references: [id])
+
+  // CRM additions (all optional)
+  subModuleId    String?
+  subModule      SubModule? @relation("SubModuleTasks", fields: [subModuleId], references: [id])
+  estimatedHours Float?
+  actualHours    Float?
+
+  // New multi-assignee relation
+  assignees TaskAssignee[]
+  dailyLogs DailyLog[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   completedAt DateTime?
+}
+
+// ============================================================================
+// CRM MODELS - Client Portal, Documents, Logs, Hierarchy, Comments, Team
+// ============================================================================
+
+// Client Portal Authentication
+model Client {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  name        String
+  password    String? // Nullable for magic link auth
+  magicToken  String? // For magic link authentication
+  tokenExpiry DateTime?
+  companyId   String
+  company     Company   @relation(fields: [companyId], references: [id])
+  projects    Project[] @relation("ClientProjects")
+  comments    Comment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Document Management with Cloudinary
+model Document {
+  id           String       @id @default(cuid())
+  name         String
+  url          String // Cloudinary URL
+  type         DocumentType
+  projectId    String
+  project      Project      @relation(fields: [projectId], references: [id])
+  uploadedById String
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+// Daily Work Logging (Manual + Auto)
+model DailyLog {
+  id          String    @id @default(cuid())
+  date        DateTime  @default(now())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id])
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  description String
+  taskId      String? // Optional - links to completed task
+  task        Task?     @relation(fields: [taskId], references: [id])
+  hoursSpent  Float?
+  notes       String?
+  source      LogSource @default(MANUAL)
+  createdAt   DateTime  @default(now())
+}
+
+// Project Hierarchy - Top Level
+model Module {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id])
+  order       Int         @default(0)
+  subModules  SubModule[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// Project Hierarchy - Second Level
+model SubModule {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id])
+  order       Int      @default(0)
+  tasks       Task[]   @relation("SubModuleTasks")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Threaded Comments System
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id])
+  userId    String? // Admin or Employee
+  user      User?     @relation(fields: [userId], references: [id])
+  clientId  String? // Client
+  client    Client?   @relation(fields: [clientId], references: [id])
+  parentId  String? // For threaded replies
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Project Team Assignment with Roles
+model ProjectEmployee {
+  id         String      @id @default(cuid())
+  projectId  String
+  project    Project     @relation(fields: [projectId], references: [id])
+  employeeId String
+  employee   Employee    @relation(fields: [employeeId], references: [id])
+  role       ProjectRole @default(DEVELOPER)
+  assignedAt DateTime    @default(now())
+
+  @@unique([projectId, employeeId])
+}
+
+// Multi-Assignee Task Support
+model TaskAssignee {
+  id         String   @id @default(cuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id])
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  assignedAt DateTime @default(now())
+
+  @@unique([taskId, employeeId])
 }

@@ -12,11 +12,13 @@ export const authConfig = {
 
       const isAdminRoute = nextUrl.pathname.startsWith('/admin')
       const isEmployeeRoute = nextUrl.pathname.startsWith('/employee')
+      const isClientRoute = nextUrl.pathname.startsWith('/client') && !nextUrl.pathname.startsWith('/client/login') && !nextUrl.pathname.startsWith('/client/auth')
       const isDashboardRoute = nextUrl.pathname.startsWith('/dashboard')
       const isAuthPage = nextUrl.pathname.startsWith('/login') || nextUrl.pathname.startsWith('/signup')
+      const isClientAuthPage = nextUrl.pathname.startsWith('/client/login') || nextUrl.pathname.startsWith('/client/auth')
 
       if (!isLoggedIn) {
-        if (isAuthPage) return true
+        if (isAuthPage || isClientAuthPage) return true
         return false // Redirect to /login
       }
 
@@ -24,11 +26,13 @@ export const authConfig = {
         // Redirect logged-in users to their dashboard
         if (userType === 'ADMIN') return Response.redirect(new URL('/admin', nextUrl))
         if (userType === 'EMPLOYEE') return Response.redirect(new URL('/employee', nextUrl))
+        if (userType === 'CLIENT') return Response.redirect(new URL('/client', nextUrl))
       }
 
       // Route based on userType
       if (isAdminRoute && userType !== 'ADMIN') return false
       if (isEmployeeRoute && userType !== 'EMPLOYEE') return false
+      if (isClientRoute && userType !== 'CLIENT') return false
 
       // Handle old /dashboard routes - redirect to /admin
       if (isDashboardRoute && userType === 'ADMIN') {
@@ -39,6 +43,7 @@ export const authConfig = {
       if (nextUrl.pathname === '/') {
         if (userType === 'ADMIN') return Response.redirect(new URL('/admin', nextUrl))
         if (userType === 'EMPLOYEE') return Response.redirect(new URL('/employee', nextUrl))
+        if (userType === 'CLIENT') return Response.redirect(new URL('/client', nextUrl))
       }
 
       return true

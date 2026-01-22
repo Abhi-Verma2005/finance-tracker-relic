@@ -65,6 +65,21 @@ export async function updateTask(taskId: string, data: Partial<TaskData>) {
       },
     })
 
+    // Auto-create daily log if task was just completed
+    if (data.status === 'COMPLETED' && existing?.status !== 'COMPLETED' && task.assigneeId) {
+      await db.dailyLog.create({
+        data: {
+          projectId: task.projectId,
+          employeeId: task.assigneeId,
+          taskId: task.id,
+          description: `Completed: "${task.title}"`,
+          hoursSpent: task.actualHours || task.estimatedHours,
+          source: 'AUTO_TASK_COMPLETE',
+          date: new Date(),
+        },
+      })
+    }
+
     // Send email if reassigned
     if (
       data.assigneeId &&

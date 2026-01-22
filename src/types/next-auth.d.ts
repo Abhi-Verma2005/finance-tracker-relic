@@ -9,7 +9,7 @@ declare module "next-auth" {
     user: {
       id: string
       companyId: string
-      userType: 'ADMIN' | 'EMPLOYEE'
+      userType: 'ADMIN' | 'EMPLOYEE' | 'CLIENT'
       employeeId?: string
     } & DefaultSession["user"]
   }
@@ -19,7 +19,7 @@ declare module "next-auth" {
     email: string
     name?: string
     companyId?: string | null
-    userType: 'ADMIN' | 'EMPLOYEE'
+    userType: 'ADMIN' | 'EMPLOYEE' | 'CLIENT'
     employeeId?: string
   }
 }
@@ -29,7 +29,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string
     companyId: string
-    userType: 'ADMIN' | 'EMPLOYEE'
+    userType: 'ADMIN' | 'EMPLOYEE' | 'CLIENT'
     employeeId?: string
   }
 }

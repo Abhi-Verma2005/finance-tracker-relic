@@ -14,11 +14,25 @@ export async function createProject(data: ProjectData) {
   try {
     const validated = projectSchema.parse(data)
 
-    const project = await db.project.create({
-      data: {
-        ...validated,
-        companyId: session.user.companyId,
-      },
+    // Create project with auto-tag in transaction
+    const project = await db.$transaction(async (tx) => {
+      const newProject = await tx.project.create({
+        data: {
+          ...validated,
+          companyId: session.user.companyId,
+        },
+      })
+
+      // Auto-create tag with project name for financial tracking
+      await tx.tag.create({
+        data: {
+          name: `Project: ${validated.name}`,
+          companyId: session.user.companyId,
+          projectId: newProject.id,
+        },
+      })
+
+      return newProject
     })
 
     revalidatePath('/admin/projects')
@@ -106,10 +120,46 @@ export async function getProjectById(id: string) {
         companyId: session.user.companyId,
       },
       include: {
+        client: true,
         tasks: {
           include: { assignee: true },
           orderBy: { createdAt: 'desc' },
         },
+        documents: {
+          include: { uploadedBy: true },
+          orderBy: { createdAt: 'desc' },
+        },
+        dailyLogs: {
+          include: { employee: true, task: true },
+          orderBy: { date: 'desc' },
+        },
+        modules: {
+          include: {
+            subModules: {
+              include: {
+                tasks: {
+                  include: { assignee: true },
+                },
+              },
+            },
+          },
+          orderBy: { order: 'asc' },
+        },
+        comments: {
+          include: {
+            user: true,
+            client: true,
+            replies: {
+              include: { user: true, client: true },
+            },
+          },
+          where: { parentId: null },
+          orderBy: { createdAt: 'desc' },
+        },
+        projectEmployees: {
+          include: { employee: true },
+        },
+        tag: true,
       },
     })
   } catch (error) {

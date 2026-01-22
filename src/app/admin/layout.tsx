@@ -77,6 +77,10 @@ export default async function AdminLayout({
             <FolderKanban className="h-4 w-4" />
             <span>Projects</span>
           </Link>
+          <Link href="/admin/clients" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
+            <Users className="h-4 w-4" />
+            <span>Clients</span>
+          </Link>
           <Link href="/admin/reports" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent">
             <BarChart3 className="h-4 w-4" />
             <span>Reports</span>

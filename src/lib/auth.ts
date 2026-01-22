@@ -58,6 +58,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               }
             }
           }
+
+          // Finally check Client table
+          const client = await db.client.findUnique({
+            where: { email },
+            include: { company: true },
+          })
+
+          if (client && client.password) {
+            const passwordsMatch = await bcrypt.compare(password, client.password)
+            if (passwordsMatch) {
+              return {
+                id: client.id,
+                name: client.name,
+                email: client.email,
+                companyId: client.companyId,
+                userType: 'CLIENT' as const,
+              }
+            }
+          }
         }
 
         return null

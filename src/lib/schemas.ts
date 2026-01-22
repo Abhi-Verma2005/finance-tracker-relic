@@ -81,6 +81,9 @@ export const projectSchema = z.object({
   status: z.enum(["PLANNING", "ACTIVE", "ON_HOLD", "COMPLETED", "CANCELLED"]).default("PLANNING"),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
+  clientId: z.string().optional(),
+  hasUpworkTimesheet: z.boolean().default(false),
+  upworkContractUrl: z.string().url().optional().or(z.literal("")),
 })
 
 export const taskSchema = z.object({
@@ -91,6 +94,60 @@ export const taskSchema = z.object({
   dueDate: z.date().optional(),
   projectId: z.string().min(1, { message: "Project is required" }),
   assigneeId: z.string().optional(),
+  subModuleId: z.string().optional(),
+  estimatedHours: z.coerce.number().min(0).optional(),
+  actualHours: z.coerce.number().min(0).optional(),
+})
+
+// CRM Schemas
+export const clientSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).optional().or(z.literal("")),
+})
+
+export const documentSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  url: z.string().url({ message: "Invalid URL" }),
+  type: z.enum(["CONTRACT", "INVOICE", "DESIGN", "SOW", "REPORT", "IMAGE", "VIDEO", "OTHER"]),
+  projectId: z.string().min(1, { message: "Project is required" }),
+})
+
+export const dailyLogSchema = z.object({
+  date: z.date().default(() => new Date()),
+  projectId: z.string().min(1, { message: "Project is required" }),
+  employeeId: z.string().min(1, { message: "Employee is required" }),
+  description: z.string().min(2, { message: "Description must be at least 2 characters" }),
+  taskId: z.string().optional(),
+  hoursSpent: z.coerce.number().min(0).optional(),
+  notes: z.string().optional(),
+  source: z.enum(["MANUAL", "AUTO_TASK_COMPLETE"]).default("MANUAL"),
+})
+
+export const moduleSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  description: z.string().optional(),
+  projectId: z.string().min(1, { message: "Project is required" }),
+  order: z.coerce.number().int().min(0).default(0),
+})
+
+export const subModuleSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  description: z.string().optional(),
+  moduleId: z.string().min(1, { message: "Module is required" }),
+  order: z.coerce.number().int().min(0).default(0),
+})
+
+export const commentSchema = z.object({
+  content: z.string().min(1, { message: "Comment cannot be empty" }),
+  projectId: z.string().min(1, { message: "Project is required" }),
+  parentId: z.string().optional(),
+})
+
+export const projectEmployeeSchema = z.object({
+  projectId: z.string().min(1, { message: "Project is required" }),
+  employeeId: z.string().min(1, { message: "Employee is required" }),
+  role: z.enum(["LEAD", "DEVELOPER", "REVIEWER", "DESIGNER", "QA"]).default("DEVELOPER"),
 })
 
 export type LoginData = z.infer<typeof loginSchema>
@@ -104,3 +161,10 @@ export type IncomeData = z.infer<typeof incomeSchema>
 export type RecurringTransactionData = z.infer<typeof recurringTransactionSchema>
 export type ProjectData = z.infer<typeof projectSchema>
 export type TaskData = z.infer<typeof taskSchema>
+export type ClientData = z.infer<typeof clientSchema>
+export type DocumentData = z.infer<typeof documentSchema>
+export type DailyLogData = z.infer<typeof dailyLogSchema>
+export type ModuleData = z.infer<typeof moduleSchema>
+export type SubModuleData = z.infer<typeof subModuleSchema>
+export type CommentData = z.infer<typeof commentSchema>
+export type ProjectEmployeeData = z.infer<typeof projectEmployeeSchema>

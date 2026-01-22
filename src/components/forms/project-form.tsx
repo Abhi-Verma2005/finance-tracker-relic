@@ -12,6 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -23,12 +24,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { Checkbox } from "@/components/ui/checkbox"
+import { getClients } from "@/actions/clients"
 
 interface ProjectFormProps {
   project?: any
@@ -37,6 +40,15 @@ interface ProjectFormProps {
 
 export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
   const [isPending, setIsPending] = useState(false)
+  const [clients, setClients] = useState<any[]>([])
+
+  useEffect(() => {
+    const loadClients = async () => {
+      const clientList = await getClients()
+      setClients(clientList)
+    }
+    loadClients()
+  }, [])
 
   const form = useForm<ProjectData>({
     resolver: zodResolver(projectSchema) as unknown as Resolver<ProjectData>,
@@ -46,6 +58,9 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
       status: project?.status || "PLANNING",
       startDate: project?.startDate ? new Date(project.startDate) : undefined,
       endDate: project?.endDate ? new Date(project.endDate) : undefined,
+      clientId: project?.clientId || undefined,
+      hasUpworkTimesheet: project?.hasUpworkTimesheet || false,
+      upworkContractUrl: project?.upworkContractUrl || "",
     },
   })
 
@@ -208,6 +223,81 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="clientId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Client</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a client (optional)" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">No Client</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name} ({client.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Assign this project to a client for portal access
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="hasUpworkTimesheet"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>
+                  Enable Upwork Timesheet Tracking
+                </FormLabel>
+                <FormDescription>
+                  Track this project with Upwork timesheets and receive weekly reminders
+                </FormDescription>
+              </div>
+            </FormItem>
+          )}
+        />
+
+        {form.watch("hasUpworkTimesheet") && (
+          <FormField
+            control={form.control}
+            name="upworkContractUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Upwork Contract URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="https://www.upwork.com/..."
+                    {...field}
+                    value={field.value || ""}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Link to the Upwork contract for quick access
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <div className="flex justify-end gap-3">
           <Button type="submit" disabled={isPending}>
