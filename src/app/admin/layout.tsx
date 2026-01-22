@@ -32,7 +32,7 @@ export default async function AdminLayout({
               <div className="relative h-12 w-12">
                 <Image 
                   src="/logo.png" 
-                  alt="Relicwave" 
+                  alt="Internal Dash" 
                   fill
                   className="object-contain"
                   priority
