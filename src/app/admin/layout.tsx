@@ -24,8 +24,8 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row bg-background">
-      <aside className="w-full md:w-64 border-r border-border p-6 flex flex-col">
+    <div className="flex h-screen overflow-hidden flex-col md:flex-row bg-background">
+      <aside className="w-full md:w-64 border-r border-border p-6 flex flex-col overflow-y-auto shrink-0">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <Link href="/admin" className="block">
