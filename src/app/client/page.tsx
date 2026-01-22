@@ -1,3 +1,4 @@
+import { ClientLayoutWrapper } from '@/components/layouts/client-layout-wrapper'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { redirect } from 'next/navigation'
@@ -30,8 +31,8 @@ export default async function ClientDashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background p-8">
-            <div className="max-w-6xl mx-auto space-y-6">
+        <ClientLayoutWrapper>
+            <div className="space-y-6">
                 <div>
                     <h1 className="text-3xl font-bold">Welcome, {client.name}</h1>
                     <p className="text-muted-foreground mt-1">Your Projects</p>
@@ -72,6 +73,6 @@ export default async function ClientDashboardPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </ClientLayoutWrapper>
     )
 }

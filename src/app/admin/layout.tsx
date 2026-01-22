@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { LayoutDashboard, Wallet, Receipt, Tags, LogOut, TrendingUp, ListFilter, Users, FolderTree, BarChart3, Repeat, FolderKanban } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/auth"
@@ -27,9 +28,17 @@ export default async function AdminLayout({
       <aside className="w-full md:w-64 border-r border-border p-6 flex flex-col">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-bold">
-              Finance Tracker
-            </h1>
+            <Link href="/admin" className="block">
+              <div className="relative h-12 w-12">
+                <Image 
+                  src="/logo.png" 
+                  alt="Relicwave" 
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </Link>
             <ModeToggle />
           </div>
           <p className="text-sm text-muted-foreground mt-2">{session.user?.name}</p>

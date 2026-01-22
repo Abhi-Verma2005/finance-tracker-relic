@@ -1,3 +1,4 @@
+import { ClientLayoutWrapper } from '@/components/layouts/client-layout-wrapper'
 import { auth } from '@/lib/auth'
 import { getProjectById } from '@/actions/projects'
 import { redirect, notFound } from 'next/navigation'
@@ -13,10 +14,13 @@ import { db } from '@/lib/db'
 
 export default async function ClientProjectPage({
     params,
+    searchParams,
 }: {
     params: Promise<{ projectId: string }>
+    searchParams: Promise<{ tab?: string }>
 }) {
     const { projectId } = await params
+    const { tab } = await searchParams
     const session = await auth()
 
     if (!session || session.user.userType !== 'CLIENT') {
@@ -42,8 +46,8 @@ export default async function ClientProjectPage({
     }) : []
 
     return (
-        <div className="min-h-screen bg-background p-8">
-            <div className="max-w-6xl mx-auto space-y-6">
+        <ClientLayoutWrapper>
+            <div className="space-y-6">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-3xl font-bold">{project.name}</h1>
@@ -54,7 +58,7 @@ export default async function ClientProjectPage({
                     )}
                 </div>
 
-                <Tabs defaultValue="overview" className="w-full">
+                <Tabs defaultValue={tab || "overview"} className="w-full">
                     <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="overview">
                             <TrendingUp className="h-4 w-4 mr-2" />
@@ -128,6 +132,6 @@ export default async function ClientProjectPage({
                     </TabsContent>
                 </Tabs>
             </div>
-        </div>
+        </ClientLayoutWrapper>
     )
 }
