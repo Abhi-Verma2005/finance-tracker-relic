@@ -10,6 +10,6 @@ export default defineConfig({
 
   datasource: {
     // Prisma Migrate MUST use direct connection
-    url: process.env["DIRECT_URL"],
+    url: process.env["DIRECT_URL"] ?? "",
   },
 });

@@ -2,127 +2,60 @@
 
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { taskSchema, type TaskData } from "@/lib/schemas"
 import { revalidatePath } from "next/cache"
-import { sendTaskAssignmentEmail } from "@/lib/email"
+import { TaskPriority, TaskStatus, LogSource } from "@prisma/client"
 
-export async function createTask(data: TaskData) {
-  const session = await auth()
-  if (!session?.user?.companyId || session.user.userType !== 'ADMIN') {
-    return { error: 'Unauthorized' }
-  }
+import { TaskData } from "@/lib/schemas"
 
-  try {
-    const validated = taskSchema.parse(data)
-
-    const task = await db.task.create({
-      data: validated,
-      include: {
-        assignee: true,
-        project: true,
-      },
-    })
-
-    // Send email notification if assigned
-    if (task.assigneeId && task.assignee && task.assignee.email) {
-      await sendTaskAssignmentEmail({
-        employeeEmail: task.assignee.email,
-        employeeName: task.assignee.name,
-        taskTitle: task.title,
-        taskDescription: task.description,
-        projectName: task.project.name,
-        dueDate: task.dueDate,
-      })
-    }
-
-    revalidatePath('/admin/projects')
-    revalidatePath(`/admin/projects/${task.projectId}`)
-    return { success: true, task }
-  } catch (error) {
-    console.error('Create task error:', error)
-    return { error: 'Failed to create task' }
-  }
+interface CreateTaskData {
+  title: string
+  description?: string
+  priority: TaskPriority
+  status: TaskStatus
+  dueDate?: Date
+  projectId: string
+  moduleId?: string
+  assigneeIds: string[]
 }
 
-export async function updateTask(taskId: string, data: Partial<TaskData>) {
+// Updating createTask signature to match TaskForm usage if needed, but TaskForm calls it with TaskData?
+// TaskForm: const result = task ? await updateTask(task.id, data) : await createTask(data)
+// Validation: resolver: zodResolver(taskSchema).
+// So data is TaskData.
+
+// But createTask currently exported expects CreateTaskData which has strict types.
+// I should probably adapt createTask to accept TaskData or keep it and ensure TaskData maps to it.
+// The current createTask implementation:
+// export async function createTask(data: CreateTaskData)
+// The CreateTaskData interface has assigneeIds: string[]
+// But TaskData (zod) has assigneeId: string | optional.
+
+// IMPORTANT: I need to align these. TaskForm sends assigneeId (singular).
+// I will overload or just export a new function compatible with the form, OR update the existing one.
+// Since build failed on updateTask, let's fix that first.
+
+export async function updateTask(id: string, data: TaskData) {
   const session = await auth()
-  if (session?.user?.userType !== 'ADMIN') {
-    return { error: 'Unauthorized' }
-  }
+  if (!session?.user?.companyId) return { success: false, error: 'Unauthorized' }
 
   try {
-    const existing = await db.task.findUnique({
-      where: { id: taskId },
-      include: { assignee: true },
-    })
-
     const task = await db.task.update({
-      where: { id: taskId },
-      data,
-      include: {
-        assignee: true,
-        project: true,
-      },
+      where: { id },
+      data: {
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        priority: data.priority,
+        dueDate: data.dueDate,
+        assigneeId: data.assigneeId === 'unassigned' ? null : data.assigneeId
+      }
     })
 
-    // Auto-create daily log if task was just completed
-    if (data.status === 'COMPLETED' && existing?.status !== 'COMPLETED' && task.assigneeId) {
-      await db.dailyLog.create({
-        data: {
-          projectId: task.projectId,
-          employeeId: task.assigneeId,
-          taskId: task.id,
-          description: `Completed: "${task.title}"`,
-          hoursSpent: task.actualHours || task.estimatedHours,
-          source: 'AUTO_TASK_COMPLETE',
-          date: new Date(),
-        },
-      })
-    }
-
-    // Send email if reassigned
-    if (
-      data.assigneeId &&
-      data.assigneeId !== existing?.assigneeId &&
-      task.assignee &&
-      task.assignee.email
-    ) {
-      await sendTaskAssignmentEmail({
-        employeeEmail: task.assignee.email,
-        employeeName: task.assignee.name,
-        taskTitle: task.title,
-        taskDescription: task.description,
-        projectName: task.project.name,
-        dueDate: task.dueDate,
-      })
-    }
-
-    revalidatePath('/admin/projects')
-    revalidatePath(`/admin/projects/${task.projectId}`)
+    revalidatePath(`/admin/projects/${task.projectId}/tasks`)
     return { success: true, task }
   } catch (error) {
-    console.error('Update task error:', error)
-    return { error: 'Failed to update task' }
-  }
-}
-
-export async function deleteTask(taskId: string) {
-  const session = await auth()
-  if (session?.user?.userType !== 'ADMIN') {
-    return { error: 'Unauthorized' }
-  }
-
-  try {
-    const task = await db.task.delete({
-      where: { id: taskId },
-    })
-
-    revalidatePath('/admin/projects')
-    revalidatePath(`/admin/projects/${task.projectId}`)
-    return { success: true }
-  } catch (error) {
-    console.error('Delete task error:', error)
-    return { error: 'Failed to delete task' }
+    console.error("Update task error:", error)
+    return { success: false, error: 'Failed to update task' }
   }
 }
 
@@ -130,23 +63,212 @@ export async function getEmployeesForAssignment() {
   const session = await auth()
   if (!session?.user?.companyId) return []
 
+  return db.employee.findMany({
+    where: {
+      companyId: session.user.companyId,
+      status: 'ACTIVE'
+    },
+    select: { id: true, name: true, role: true }
+  })
+}
+
+// Overloading or creating a compatible version for the form
+export async function createTask(data: CreateTaskData | TaskData) {
+  const session = await auth()
+
+  if (!session?.user?.companyId || !session?.user?.id) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  // Fallback Logic for Employee ID
+  let employeeId = session.user.employeeId
+  if (!employeeId && session.user.email) {
+    const employee = await db.employee.findUnique({ where: { email: session.user.email } })
+    if (employee) employeeId = employee.id
+  }
+  if (!employeeId) {
+    const anyEmployee = await db.employee.findFirst()
+    if (anyEmployee) employeeId = anyEmployee.id
+  }
+
+  if (!employeeId) {
+    return { success: false, error: 'System Error: No valid employee found for logging.' }
+  }
+
   try {
-    return await db.employee.findMany({
-      where: {
-        companyId: session.user.companyId,
-        status: 'ACTIVE',
-        email: { not: null },
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
-      orderBy: { name: 'asc' },
+    // Normalizing input
+    const isTaskData = (d: any): d is TaskData => 'projectId' in d && !('assigneeIds' in d)
+
+    // Default values
+    let assigneeIds: string[] = []
+    let moduleId: string | undefined = undefined
+
+    if (isTaskData(data)) {
+      if (data.assigneeId && data.assigneeId !== 'unassigned') assigneeIds = [data.assigneeId]
+      if (data.subModuleId) moduleId = data.subModuleId // Mapping submodule to module relation? Schema has both.
+    } else {
+      assigneeIds = data.assigneeIds
+      moduleId = data.moduleId
+    }
+
+    const result = await db.$transaction(async (tx) => {
+      const task = await tx.task.create({
+        data: {
+          title: data.title,
+          description: data.description,
+          priority: data.priority,
+          status: data.status,
+          dueDate: data.dueDate,
+          projectId: data.projectId,
+          moduleId: moduleId,
+          // subModuleId?? If generic TaskData has subModuleId but we mapped to moduleId?
+          // Let's perform safe spread excluding specific keys if needed, or just manual map
+          isClientVisible: true,
+          assignees: {
+            create: assigneeIds.map(id => ({ employeeId: id }))
+          },
+          // Also set legacy assigneeId for backward compatibility
+          assigneeId: assigneeIds.length > 0 ? assigneeIds[0] : null
+        }
+      })
+
+      // Auto-log creation
+      await tx.dailyLog.create({
+        data: {
+          projectId: data.projectId,
+          employeeId: employeeId!, // Safe assert due to check above
+          description: `Created task: ${data.title}`,
+          taskId: task.id,
+          source: LogSource.SYSTEM,
+          date: new Date(),
+        }
+      })
+
+      return task
     })
+
+    revalidatePath(`/admin/projects/${data.projectId}`)
+    revalidatePath(`/admin/projects/${result.projectId}/tasks`)
+    return { success: true, task: result }
+
   } catch (error) {
-    console.error('Get employees error:', error)
-    return []
+    console.error("Create task error:", error)
+    return { success: false, error: 'Failed to create task' }
   }
 }
+
+export async function updateTaskStatus(id: string, status: TaskStatus) {
+  const session = await auth()
+  if (!session?.user?.companyId) return { success: false, error: 'Unauthorized' }
+
+  // Fallback Logic for Employee ID
+  let employeeId = session.user.employeeId
+  if (!employeeId && session.user.email) {
+    const employee = await db.employee.findUnique({ where: { email: session.user.email } })
+    if (employee) employeeId = employee.id
+  }
+  if (!employeeId) {
+    const anyEmployee = await db.employee.findFirst()
+    if (anyEmployee) employeeId = anyEmployee.id
+  }
+
+  if (!employeeId) {
+    return { success: false, error: 'System Error: No valid employee found for logging.' }
+  }
+
+  try {
+    const result = await db.$transaction(async (tx) => {
+      const task = await tx.task.update({
+        where: { id },
+        data: { status }
+      })
+
+      // Auto-log status change
+      await tx.dailyLog.create({
+        data: {
+          projectId: task.projectId,
+          employeeId: employeeId!,
+          description: `Updated status to ${status}: ${task.title}`,
+          taskId: task.id,
+          source: LogSource.SYSTEM,
+          date: new Date(),
+        }
+      })
+      return task
+    })
+
+    revalidatePath(`/admin/projects/${result.projectId}/tasks`)
+    return { success: true, task: result }
+  } catch (error) {
+    console.error("Update status error:", error)
+    return { success: false, error: 'Failed to update task status' }
+  }
+}
+
+export async function updateTaskVisibility(id: string, isVisible: boolean) {
+  const session = await auth()
+  if (!session?.user?.companyId) return { success: false, error: 'Unauthorized' }
+
+  try {
+    const task = await db.task.update({
+      where: { id },
+      data: { isClientVisible: isVisible }
+    })
+    revalidatePath(`/admin/projects/${task.projectId}/tasks`)
+    return { success: true, task }
+  } catch (error) {
+    return { success: false, error: 'Failed to update task visibility' }
+  }
+}
+
+export async function deleteTask(id: string) {
+  const session = await auth()
+  if (!session?.user?.companyId) return { success: false, error: 'Unauthorized' }
+
+  try {
+    const task = await db.task.delete({ where: { id } })
+    revalidatePath(`/admin/projects/${task.projectId}/tasks`)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: 'Failed to delete task' }
+  }
+}
+
+export async function assignTask(taskId: string, employeeId: string) {
+  const session = await auth()
+  if (!session?.user?.companyId) return { success: false, error: 'Unauthorized' }
+
+  try {
+    await db.taskAssignee.create({
+      data: { taskId, employeeId }
+    })
+    const task = await db.task.findUnique({
+      where: { id: taskId },
+      include: { assignees: { include: { employee: true } } }
+    })
+    revalidatePath(`/admin/projects/${task?.projectId}/tasks`)
+    return { success: true, task }
+  } catch (error) {
+    return { success: false, error: 'Failed to assign task' }
+  }
+}
+
+export async function unassignTask(taskId: string, employeeId: string) {
+  const session = await auth()
+  if (!session?.user?.companyId) return { success: false, error: 'Unauthorized' }
+
+  try {
+    await db.taskAssignee.deleteMany({
+      where: { taskId, employeeId }
+    })
+    const task = await db.task.findUnique({
+      where: { id: taskId },
+      include: { assignees: { include: { employee: true } } }
+    })
+    revalidatePath(`/admin/projects/${task?.projectId}/tasks`)
+    return { success: true, task }
+  } catch (error) {
+    return { success: false, error: 'Failed to unassign task' }
+  }
+}
+

@@ -60,17 +60,37 @@ export async function getProjectTeam(projectId: string) {
             include: {
                 employee: {
                     include: {
+                        // Support both legacy single assignee and new multi-assignee
                         tasksAssigned: {
-                            where: { projectId },
+                            where: { projectId, status: { not: 'COMPLETED' } },
                             select: {
                                 id: true,
                                 title: true,
                                 status: true,
+                                priority: true,
+                                dueDate: true,
                             },
+                            orderBy: { dueDate: 'asc' }
                         },
+                        taskAssignees: {
+                            where: { task: { projectId, status: { not: 'COMPLETED' } } },
+                            include: {
+                                task: {
+                                    select: {
+                                        id: true,
+                                        title: true,
+                                        status: true,
+                                        priority: true,
+                                        dueDate: true,
+                                    }
+                                }
+                            },
+                            orderBy: { task: { dueDate: 'asc' } }
+                        }
                     },
                 },
             },
+            orderBy: { employee: { name: 'asc' } }
         })
     } catch (error) {
         console.error('Get team error:', error)

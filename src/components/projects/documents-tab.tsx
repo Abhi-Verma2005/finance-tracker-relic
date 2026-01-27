@@ -1,99 +1,110 @@
-'use client'
+"use client"
 
 import { useState } from "react"
-import { Upload, X } from "lucide-react"
+import { LayoutGrid, ListFilter, List as ListIcon, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { createDocument } from "@/actions/documents"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DocumentListView } from "@/components/projects/document-list-view"
+import { DocumentGridView } from "@/components/projects/document-grid-view"
+import { DocumentUploadDialog } from "@/components/projects/document-upload-dialog"
+import type { ExtendedDocument } from "@/types/documents"
+import { DocumentType } from "@prisma/client"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { DocumentListSkeleton, DocumentGridSkeleton } from "@/components/projects/skeletons"
 
-const DOCUMENT_TYPE_ICONS = {
-    CONTRACT: "📄",
-    INVOICE: "🧾",
-    DESIGN: "🎨",
-    SOW: "📋",
-    REPORT: "📊",
-    IMAGE: "🖼️",
-    VIDEO: "🎬",
-    OTHER: "📁",
+interface DocumentsTabProps {
+  projectId: string
+  documents: ExtendedDocument[]
+  userId?: string
 }
 
-const DOCUMENT_TYPES = Object.keys(DOCUMENT_TYPE_ICONS) as Array<keyof typeof DOCUMENT_TYPE_ICONS>
+export function DocumentsTab({ projectId, documents, userId }: DocumentsTabProps) {
+  const router = useRouter()
+  const [view, setView] = useState<"list" | "grid">("list")
+  const [typeFilter, setTypeFilter] = useState<string>("ALL")
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-export function DocumentsTab({ projectId, documents, userId }: any) {
-    const router = useRouter()
-    const [uploading, setUploading] = useState(false)
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await router.refresh()
+    setTimeout(() => {
+        setIsRefreshing(false)
+        toast.success("Documents refreshed")
+    }, 500) // Minimum duration for visual feedback
+  }
 
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
+  const filteredDocuments = documents.filter((doc) => {
+    if (typeFilter === "ALL") return true
+    return doc.type === typeFilter
+  })
 
-        setUploading(true)
-        try {
-            // TODO: Upload to Cloudinary
-            const url = `https://example.com/${file.name}` // Placeholder
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center border-b pb-6">
+        <div className="flex items-center gap-3">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[180px] h-9 bg-background/50 border-input/50 shadow-sm transition-colors hover:bg-accent/50">
+                    <ListFilter className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Filter type" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="ALL">All Types</SelectItem>
+                    {Object.keys(DocumentType).map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
 
-            await createDocument({
-                name: file.name,
-                url,
-                type: 'OTHER',
-                projectId,
-            }, userId)
-
-            router.refresh()
-        } catch (error) {
-            console.error('Upload failed:', error)
-        } finally {
-            setUploading(false)
-        }
-    }
-
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Documents</h3>
-                <label>
-                    <Button disabled={uploading} asChild>
-                        <span>
-                            <Upload className="h-4 w-4 mr-2" />
-                            {uploading ? 'Uploading...' : 'Upload Document'}
-                        </span>
-                    </Button>
-                    <input
-                        type="file"
-                        className="hidden"
-                        onChange={handleUpload}
-                        disabled={uploading}
-                    />
-                </label>
+            <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg border border-border/50">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`h-7 w-7 rounded-sm transition-all ${view === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:bg-transparent"}`}
+                    onClick={() => setView("list")}
+                >
+                    <ListIcon className="h-4 w-4" />
+                </Button>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`h-7 w-7 rounded-sm transition-all ${view === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:bg-transparent"}`}
+                    onClick={() => setView("grid")}
+                >
+                    <LayoutGrid className="h-4 w-4" />
+                </Button>
             </div>
 
-            {documents.length === 0 ? (
-                <Card className="p-8 text-center text-muted-foreground">
-                    No documents yet. Upload your first file.
-                </Card>
-            ) : (
-                <div className="space-y-2">
-                    {documents.map((doc: any) => (
-                        <Card key={doc.id} className="p-4 flex items-center justify-between hover:bg-accent/50 transition-colors">
-                            <div className="flex items-center gap-3">
-                                <span className="text-2xl">{DOCUMENT_TYPE_ICONS[doc.type as keyof typeof DOCUMENT_TYPE_ICONS]}</span>
-                                <div>
-                                    <a href={doc.url} target="_blank" rel="noopener noreferrer" className="font-medium hover:underline">
-                                        {doc.name}
-                                    </a>
-                                    <p className="text-xs text-muted-foreground">
-                                        Uploaded by {doc.uploadedBy.name} on {new Date(doc.createdAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                            </div>
-                            <Button variant="ghost" size="sm">
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </Card>
-                    ))}
-                </div>
-            )}
+            <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 border-input/50 shadow-sm bg-background/50 hover:bg-accent/50"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+            >
+                <RefreshCw className={`h-4 w-4 text-muted-foreground ${isRefreshing ? "animate-spin" : ""}`} />
+            </Button>
         </div>
-    )
+
+        <DocumentUploadDialog 
+            projectId={projectId} 
+            trigger={
+                <Button className="h-9 shadow-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                    Add Document
+                </Button>
+            }
+        />
+      </div>
+
+      <div className="min-h-[400px]">
+        {isRefreshing ? (
+             view === "list" ? <DocumentListSkeleton /> : <DocumentGridSkeleton />
+        ) : view === "list" ? (
+            <DocumentListView documents={filteredDocuments} />
+        ) : (
+            <DocumentGridView documents={filteredDocuments} />
+        )}
+      </div>
+    </div>
+  )
 }

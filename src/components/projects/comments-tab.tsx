@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { createComment } from "@/actions/comments"
+import { addComment } from "@/actions/comments"
 import { useRouter } from "next/navigation"
 
 export function CommentsTab({ projectId, comments, userId, userType }: any) {
@@ -18,11 +18,8 @@ export function CommentsTab({ projectId, comments, userId, userType }: any) {
 
         setLoading(true)
         try {
-            await createComment(
-                { content, projectId },
-                userType !== 'CLIENT' ? userId : undefined,
-                userType === 'CLIENT' ? userId : undefined
-            )
+            await addComment(null, content, projectId)
+
             setContent("")
             router.refresh()
         } catch (error) {

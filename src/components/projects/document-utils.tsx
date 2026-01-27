@@ -1,0 +1,55 @@
+import { DocumentType } from "@prisma/client"
+import { 
+  FileText, 
+  Receipt, 
+  Palette, 
+  ClipboardList, 
+  BarChart, 
+  Image, 
+  Video, 
+  FileSpreadsheet, 
+  Presentation, 
+  Code2, 
+  Archive, 
+  Music, 
+  AlignLeft, 
+  Folder,
+  Link,
+  LucideIcon
+} from "lucide-react"
+
+export const DOCUMENT_TYPE_ICONS: Record<DocumentType, LucideIcon> = {
+    CONTRACT: FileText,
+    INVOICE: Receipt,
+    DESIGN: Palette,
+    SOW: ClipboardList,
+    REPORT: BarChart,
+    IMAGE: Image,
+    VIDEO: Video,
+    SPREADSHEET: FileSpreadsheet,
+    PRESENTATION: Presentation,
+    CODE: Code2,
+    ARCHIVE: Archive,
+    AUDIO: Music,
+    TEXT: AlignLeft,
+    LINK: Link,
+    OTHER: Folder,
+}
+
+export const DOCUMENT_TYPE_COLORS: Record<DocumentType, string> = {
+    CONTRACT: "text-blue-500",
+    INVOICE: "text-green-500",
+    DESIGN: "text-purple-500",
+    SOW: "text-orange-500",
+    REPORT: "text-indigo-500",
+    IMAGE: "text-pink-500",
+    VIDEO: "text-red-500",
+    SPREADSHEET: "text-emerald-500",
+    PRESENTATION: "text-orange-600",
+    CODE: "text-slate-500",
+    ARCHIVE: "text-yellow-600",
+    AUDIO: "text-cyan-500",
+    TEXT: "text-gray-500",
+    LINK: "text-blue-400",
+    OTHER: "text-gray-400",
+}

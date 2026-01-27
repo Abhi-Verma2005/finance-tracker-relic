@@ -1,74 +1,45 @@
-'use server'
+"use server"
 
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { commentSchema, type CommentData } from "@/lib/schemas"
 import { revalidatePath } from "next/cache"
 
-export async function createComment(data: CommentData, userId?: string, clientId?: string) {
+export async function addComment(taskId: string | null, content: string, projectId: string) {
     const session = await auth()
-    if (!session?.user && !clientId) {
-        return { error: 'Unauthorized' }
-    }
+    if (!session?.user?.companyId || !session.user.id) return { error: 'Unauthorized' }
 
     try {
-        const validated = commentSchema.parse(data)
-
         const comment = await db.comment.create({
             data: {
-                ...validated,
-                userId,
-                clientId,
-            },
+                content,
+                taskId,
+                projectId,
+                userId: session.user.id,
+                // Client vs User logic needed if user is client. 
+                // Assuming session has info. For now default to userId.
+            }
         })
-
-        revalidatePath(`/admin/projects/${data.projectId}`)
-        revalidatePath(`/client/${data.projectId}`)
+        revalidatePath(`/admin/projects/${projectId}/tasks`)
         return { success: true, comment }
     } catch (error) {
-        console.error('Create comment error:', error)
-        return { error: 'Failed to create comment' }
+        return { error: 'Failed to add comment' }
     }
 }
 
-export async function getProjectComments(projectId: string) {
+export async function getTaskComments(taskId: string) {
+    const session = await auth()
+    if (!session?.user?.companyId) return []
+
     try {
         return await db.comment.findMany({
-            where: {
-                projectId,
-                parentId: null,
-            },
+            where: { taskId },
             include: {
-                user: true,
-                client: true,
-                replies: {
-                    include: {
-                        user: true,
-                        client: true,
-                    },
-                    orderBy: { createdAt: 'asc' },
-                },
+                user: { select: { id: true, name: true, userType: true } },
+                client: { select: { id: true, name: true } }
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'desc' }
         })
     } catch (error) {
-        console.error('Get comments error:', error)
         return []
-    }
-}
-
-export async function deleteComment(id: string) {
-    const session = await auth()
-    if (!session?.user?.companyId || session.user.userType !== 'ADMIN') {
-        return { error: 'Unauthorized' }
-    }
-
-    try {
-        const comment = await db.comment.delete({ where: { id } })
-        revalidatePath(`/admin/projects/${comment.projectId}`)
-        return { success: true }
-    } catch (error) {
-        console.error('Delete comment error:', error)
-        return { error: 'Failed to delete comment' }
     }
 }

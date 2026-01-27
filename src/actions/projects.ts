@@ -126,6 +126,7 @@ export async function getProjectById(id: string) {
           orderBy: { createdAt: 'desc' },
         },
         documents: {
+          where: { taskId: null }, // ISOLATION: Only get project-level docs, not task docs
           include: { uploadedBy: true },
           orderBy: { createdAt: 'desc' },
         },
@@ -159,7 +160,12 @@ export async function getProjectById(id: string) {
         projectEmployees: {
           include: { employee: true },
         },
-        tag: true,
+        tag: {
+          include: {
+            expenditures: { include: { expenditure: true } },
+            incomes: { include: { income: true } },
+          }
+        },
       },
     })
   } catch (error) {

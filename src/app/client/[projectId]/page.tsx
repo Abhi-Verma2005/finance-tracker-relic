@@ -119,6 +119,10 @@ export default async function ClientProjectPage({
                             tag={project.tag}
                             incomes={tagIncomes}
                             expenditures={[]}
+                            accounts={[]}
+                            tags={[]}
+                            employees={[]}
+                            categories={[]}
                         />
                     </TabsContent>
 

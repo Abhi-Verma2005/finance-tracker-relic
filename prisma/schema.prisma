@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum UserType {
@@ -21,12 +22,20 @@ enum DocumentType {
   REPORT
   IMAGE
   VIDEO
+  SPREADSHEET
+  PRESENTATION
+  CODE
+  ARCHIVE
+  AUDIO
+  TEXT
+  LINK
   OTHER
 }
 
 enum LogSource {
   MANUAL
   AUTO_TASK_COMPLETE
+  SYSTEM
 }
 
 enum ProjectRole {
@@ -295,6 +304,13 @@ enum TaskPriority {
   URGENT
 }
 
+enum ApprovalStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Task {
   id          String       @id @default(cuid())
   title       String
@@ -310,6 +326,8 @@ model Task {
   assignee   Employee? @relation(fields: [assigneeId], references: [id])
 
   // CRM additions (all optional)
+  moduleId       String?
+  module         Module?    @relation("ModuleTasks", fields: [moduleId], references: [id])
   subModuleId    String?
   subModule      SubModule? @relation("SubModuleTasks", fields: [subModuleId], references: [id])
   estimatedHours Float?
@@ -318,10 +336,16 @@ model Task {
   // New multi-assignee relation
   assignees TaskAssignee[]
   dailyLogs DailyLog[]
+  comments  Comment[] // Threaded comments on tasks
+
+  // Client Management
+  isClientVisible Boolean       @default(true)
+  approvalStatus  ApprovalStatus @default(NONE)
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   completedAt DateTime?
+  documents   Document[]
 }
 
 // ============================================================================
@@ -354,6 +378,8 @@ model Document {
   project      Project      @relation(fields: [projectId], references: [id])
   uploadedById String
   uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  taskId       String?
+  task         Task?        @relation(fields: [taskId], references: [id])
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 }
@@ -384,6 +410,7 @@ model Module {
   project     Project     @relation(fields: [projectId], references: [id])
   order       Int         @default(0)
   subModules  SubModule[]
+  tasks       Task[]      @relation("ModuleTasks")
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -414,6 +441,10 @@ model Comment {
   parentId  String? // For threaded replies
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentReplies")
+  
+  taskId    String?
+  task      Task?     @relation(fields: [taskId], references: [id])
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
